@@ -1,6 +1,6 @@
 package redis
 
-import "github.com/tidwall/redcon"
+import "github.com/redis-go/redcon"
 
 type CommandHandler func(conn redcon.Conn, cmd redcon.Command)
 type Commands map[string]CommandHandler

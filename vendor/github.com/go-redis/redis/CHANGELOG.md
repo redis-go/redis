@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Added Options.MinIdleConns.
+- Added Options.MaxConnAge.
+- PoolStats.FreeConns is renamed to PoolStats.IdleConns.
+- Add Client.Do to simplify creating custom commands.
+
 ## v6.13
 
 - Ring got new options called `HashReplicas` and `Hash`. It is recommended to set `HashReplicas = 1000` for better keys distribution between shards.

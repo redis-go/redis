@@ -4,15 +4,14 @@ import (
 	"bytes"
 	"crypto/tls"
 	"fmt"
-	"github.com/tidwall/redcon"
+	"github.com/redis-go/redcon"
 	"strings"
 )
 
 // This is the redis server.
 type Redis struct {
 	// this is called on every request to get the commands,
-	// since this enables live editing of commands this is
-	// e.g. useful for registering commands by loading modules while the server is running
+	// e.g. registering commands by loading redis modules while the server is running is supported
 	Commands Commands
 
 	// this is called when a request is received
@@ -32,7 +31,12 @@ func Default() *Redis {
 	if defaultRedis != nil {
 		return defaultRedis
 	}
+	defaultRedis = createDefault()
+	return defaultRedis
+}
 
+// createDefault creates a new default redis.
+func createDefault() *Redis {
 	// initialize default redis server
 	r := new(Redis)
 
@@ -47,7 +51,6 @@ func Default() *Redis {
 			}
 			s := buf.String()
 			s = s[:len(s)-1]
-			fmt.Println(s)
 			c.WriteString(s)
 			return
 		}

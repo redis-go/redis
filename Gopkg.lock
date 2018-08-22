@@ -2,7 +2,8 @@
 
 
 [[projects]]
-  digest = "1:94836e6196fd3150edd474bde9afeeea27e7d51700cd3f3d44bb859b1951e998"
+  branch = "master"
+  digest = "1:2d021c6d1e4acace056cf76247aab49cafd1599f90d7683a9df1a49ff1467da6"
   name = "github.com/go-redis/redis"
   packages = [
     ".",
@@ -15,13 +16,12 @@
     "internal/util",
   ]
   pruneopts = "UT"
-  revision = "480db94d33e6088e08d628833b6c0705451d24bb"
-  version = "v6.13.2"
+  revision = "655336673b5549556800106e0dba86edc8a108c7"
 
 [[projects]]
   branch = "master"
   digest = "1:b71eb6ea46bd52fc536b9b88ea26aa88d23d0af779b40515433643ecd9c5940b"
-  name = "github.com/tidwall/redcon"
+  name = "github.com/redis-go/redcon"
   packages = ["."]
   pruneopts = "UT"
   revision = "56b016127ae730019c5e3073a413ad9526440c38"
@@ -31,7 +31,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/go-redis/redis",
-    "github.com/tidwall/redcon",
+    "github.com/redis-go/redcon",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

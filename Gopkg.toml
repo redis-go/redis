@@ -26,12 +26,12 @@
 
 
 [[constraint]]
+  branch = "master"
   name = "github.com/go-redis/redis"
-  version = "6.13.2"
 
 [[constraint]]
   branch = "master"
-  name = "github.com/tidwall/redcon"
+  name = "github.com/redis-go/redcon"
 
 [prune]
   go-tests = true

@@ -1,19 +1,17 @@
-package cmds
+package redis
 
 import (
 	"fmt"
 	"github.com/redis-go/redcon"
-	"github.com/redis-go/redis"
-	"github.com/redis-go/redis/store"
 	"github.com/redis-go/redis/types"
 	"strconv"
 	"strings"
 	"time"
 )
 
-func Set(c redcon.Conn, cmd redcon.Command, _ *redis.Redis) {
+func Set(c *Client, cmd redcon.Command) {
 	if len(cmd.Args) == 1 { // nothing done
-		c.WriteString("OK")
+		c.Conn().WriteString("OK")
 		return
 	}
 
@@ -38,17 +36,17 @@ func Set(c redcon.Conn, cmd redcon.Command, _ *redis.Redis) {
 			arg := strings.ToLower(string(cmd.Args[i]))
 			switch arg {
 			default:
-				c.WriteError(redis.SyntaxERR)
+				c.Conn().WriteError(SyntaxERR)
 				return
 			case "ex":
 				if isPX { // is already px
-					c.WriteError(redis.SyntaxERR)
+					c.Conn().WriteError(SyntaxERR)
 					return
 				}
 
 				// was last arg?
 				if len(cmd.Args) == i {
-					c.WriteError(redis.SyntaxERR)
+					c.Conn().WriteError(SyntaxERR)
 					return
 				}
 
@@ -56,11 +54,11 @@ func Set(c redcon.Conn, cmd redcon.Command, _ *redis.Redis) {
 				i++
 				i, err := strconv.ParseUint(string(cmd.Args[i]), 10, 64)
 				if err != nil {
-					c.WriteError(fmt.Sprintf("%s: %s", redis.InvalidIntErr, err.Error()))
+					c.Conn().WriteError(fmt.Sprintf("%s: %s", InvalidIntErr, err.Error()))
 					return
 				}
 				if i == 0 {
-					c.WriteError("ERR invalid expire time in set: cannot be 0")
+					c.Conn().WriteError("ERR invalid expire time in set: cannot be 0")
 					return
 				}
 				expire = time.Now().Add(time.Duration(i * uint64(time.Second)))
@@ -69,13 +67,13 @@ func Set(c redcon.Conn, cmd redcon.Command, _ *redis.Redis) {
 				continue
 			case "px":
 				if isEX { // is already ex
-					c.WriteError(redis.SyntaxERR)
+					c.Conn().WriteError(SyntaxERR)
 					return
 				}
 
 				// was last arg?
 				if len(cmd.Args) == i {
-					c.WriteError(redis.SyntaxERR)
+					c.Conn().WriteError(SyntaxERR)
 					return
 				}
 
@@ -83,11 +81,11 @@ func Set(c redcon.Conn, cmd redcon.Command, _ *redis.Redis) {
 				i++
 				i, err := strconv.ParseUint(string(cmd.Args[i]), 10, 64)
 				if err != nil {
-					c.WriteError(fmt.Sprintf("%s: %s", redis.InvalidIntErr, err.Error()))
+					c.Conn().WriteError(fmt.Sprintf("%s: %s", InvalidIntErr, err.Error()))
 					return
 				}
 				if i == 0 {
-					c.WriteError("ERR invalid expire time in set: cannot be 0")
+					c.Conn().WriteError("ERR invalid expire time in set: cannot be 0")
 					return
 				}
 				expire = time.Now().Add(time.Duration(i * uint64(time.Millisecond)))
@@ -96,7 +94,7 @@ func Set(c redcon.Conn, cmd redcon.Command, _ *redis.Redis) {
 				continue
 			case "nx":
 				if XX { // is already xx
-					c.WriteError(redis.SyntaxERR)
+					c.Conn().WriteError(SyntaxERR)
 					return
 				}
 				NX = true
@@ -104,7 +102,7 @@ func Set(c redcon.Conn, cmd redcon.Command, _ *redis.Redis) {
 				continue
 			case "xx":
 				if NX { // is already nx
-					c.WriteError(redis.SyntaxERR)
+					c.Conn().WriteError(SyntaxERR)
 					return
 				}
 				XX = true
@@ -114,15 +112,15 @@ func Set(c redcon.Conn, cmd redcon.Command, _ *redis.Redis) {
 		}
 	}
 
-	// Only set the key if it does not already exist.
-	if NX && store.GetDevStore().ItemExists(key) {
-		c.WriteNull()
-		return
-	} else if XX && !store.GetDevStore().ItemExists(key) { // Only set the key if it already exist.
-		c.WriteNull()
+	// clients selected db
+	db := c.Redis().RedisDb(c.Db())
+
+	exists := db.Exists(key)
+	if NX && exists || XX && !exists {
+		c.Conn().WriteNull()
 		return
 	}
 
-	store.GetDevStore().AddItem(key, types.NewKey(key, &value, yesExpire, expire))
-	c.WriteString("OK")
+	db.Set(key, types.NewString(&value, yesExpire, expire))
+	c.Conn().WriteString("OK")
 }

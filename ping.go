@@ -1,13 +1,12 @@
-package cmds
+package redis
 
 import (
 	"bytes"
 	"fmt"
 	"github.com/redis-go/redcon"
-	"github.com/redis-go/redis"
 )
 
-func Ping(c redcon.Conn, cmd redcon.Command, _ *redis.Redis) {
+func Ping(c *Client, cmd redcon.Command) {
 	if len(cmd.Args) > 1 {
 		var buf bytes.Buffer
 		for i := 1; i-1 < len(cmd.Args); i++ {
@@ -17,8 +16,8 @@ func Ping(c redcon.Conn, cmd redcon.Command, _ *redis.Redis) {
 		}
 		s := buf.String()
 		s = s[:len(s)-1]
-		c.WriteString(s)
+		c.Conn().WriteString(s)
 		return
 	}
-	c.WriteString("PONG")
+	c.Conn().WriteString("PONG")
 }

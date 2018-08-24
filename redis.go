@@ -4,11 +4,8 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/redis-go/redcon"
-	"github.com/redis-go/redis/cmds"
-	"github.com/redis-go/redis/store"
 	"strings"
 	"sync"
-	"time"
 )
 
 const (
@@ -19,8 +16,8 @@ const (
 
 // This is the redis server.
 type Redis struct {
-	// used for normal keys
-	redisDb *ItemStore
+	// databases
+	redisDbs RedisDbs
 
 	// Locking is important, share this mutex around to provide state.
 	mu *sync.RWMutex
@@ -36,6 +33,9 @@ type Redis struct {
 	// TODO version
 	// TODO log writer
 	// TODO modules
+
+	clients      Clients
+	nextClientId ClientId
 }
 
 // A Handler is called when a request is received and after Accept
@@ -43,66 +43,20 @@ type Redis struct {
 //
 // For implementing an own handler see the default handler
 // as a perfect example in the createDefault() function.
-type Handler func(c redcon.Conn, cmd redcon.Command, r *Redis)
+type Handler func(c *Client, cmd redcon.Command)
 
-// Accept is called when a client tries to connect and before everything else,
-// the client connection will be closed instantaneously if the function returns false.
-type Accept func(c redcon.Conn, r *Redis) bool
+// Accept is called when a Client tries to connect and before everything else,
+// the Client connection will be closed instantaneously if the function returns false.
+type Accept func(c *Client) bool
 
-// OnClose is called when a client connection is closed.
-type OnClose func(c redcon.Conn, err error, r *Redis)
+// OnClose is called when a Client connection is closed.
+type OnClose func(c *Client, err error)
 
-// Commands map
-type Commands map[string]CommandHandler
+// Client map
+type Clients map[ClientId]*Client
 
-// The CommandHandler is triggered when the received
-// command equals a registered command.
-//
-// However the CommandHandler is executed by the Handler,
-// so if you implement an own Handler make sure the CommandHandler is called.
-type CommandHandler func(c redcon.Conn, cmd redcon.Command, r *Redis)
-
-// Is called when a request is received,
-// after Accept and if the command is not registered.
-//
-// However UnknownCommand is executed by the Handler,
-// so if you implement an own Handler make sure to include UnknownCommand.
-type UnknownCommand func(c redcon.Conn, cmd redcon.Command, r *Redis)
-
-// Item stores should implement this interface.
-type ItemStore interface {
-	// Get the redis instance.
-	Redis() *Redis
-
-	// Sets a key with an item.
-	Set(key *string, i *Item)
-	// Returns the item by the key or nil if key does not exists.
-	Get(key *string) *Item
-	// Deletes a key, returns true if key existed.
-	Delete(key *string) bool
-	// Check if key exists.
-	Exists(key *string) bool
-
-	// Check if the key is expired and deletes the key if so.
-	// Returns true if the key did existed and is expired.
-	CheckExpire(key *string) bool
-}
-
-// An item type should implement this interface.
-type Item interface {
-	// The pointer to the value.
-	Value() interface{}
-	// The type of the Item.
-	ValueType() string
-	// Get timestamp when the item expires.
-	Expire() time.Time
-	// Check if this item is expired.
-	Expired() bool
-
-	// OnDelete is triggered before the key of the item is deleted.
-	// Returning an error does not cancel the deletion of the key by default and should never.
-	OnDelete(key *string, r *Redis) error
-}
+// Client id
+type ClientId uint64
 
 // Run runs the default redis server.
 // Initializes the default redis if not already.
@@ -115,13 +69,13 @@ func (r *Redis) Run(addr string) error {
 	return redcon.ListenAndServe(
 		addr,
 		func(conn redcon.Conn, cmd redcon.Command) {
-			r.HandlerFn()(conn, cmd, r)
+			r.HandlerFn()(r.NewClient(conn), cmd)
 		},
 		func(conn redcon.Conn) bool {
-			return r.AcceptFn()(conn, r)
+			return r.AcceptFn()(r.NewClient(conn))
 		},
 		func(conn redcon.Conn, err error) {
-			r.OnCloseFn()(conn, err, r)
+			r.OnCloseFn()(r.NewClient(conn), err)
 		},
 	)
 }
@@ -131,13 +85,13 @@ func (r *Redis) RunTLS(addr string, tls *tls.Config) error {
 	return redcon.ListenAndServeTLS(
 		addr,
 		func(conn redcon.Conn, cmd redcon.Command) {
-			r.HandlerFn()(conn, cmd, r)
+			r.HandlerFn()(r.NewClient(conn), cmd)
 		},
 		func(conn redcon.Conn) bool {
-			return r.AcceptFn()(conn, r)
+			return r.AcceptFn()(r.NewClient(conn))
 		},
 		func(conn redcon.Conn, err error) {
-			r.OnCloseFn()(conn, err, r)
+			r.OnCloseFn()(r.NewClient(conn), err)
 		},
 		tls,
 	)
@@ -193,59 +147,13 @@ func (r *Redis) Mu() *sync.RWMutex {
 	return r.mu
 }
 
-// RegisterCommand adds a command to the redis instance.
-// If cmd exists already the handler is overridden.
-func (r *Redis) RegisterCommand(cmd string, handler CommandHandler) {
+// NextClientId atomically gets and increments a counter to return the next client id.
+func (r *Redis) NextClientId() ClientId {
 	r.Mu().Lock()
 	defer r.Mu().Unlock()
-	r.getCommands()[cmd] = handler
-}
-
-// UnregisterCommand removes a command.
-func (r *Redis) UnregisterCommand(cmd string) {
-	r.Mu().Lock()
-	defer r.Mu().Unlock()
-	delete(r.commands, cmd)
-}
-
-// Commands returns the commands map.
-func (r *Redis) Commands() Commands {
-	r.Mu().RLock()
-	defer r.Mu().RUnlock()
-	return r.getCommands()
-}
-func (r *Redis) getCommands() Commands {
-	return r.commands
-}
-
-// CommandExists checks if one or more commands are registered.
-func (r *Redis) CommandExists(cmds ...string) bool {
-	// does this make the performance better because it does not create a loop every time?
-	if len(cmds) == 1 {
-		_, ex := r.Commands()[cmds[0]]
-		return ex
-	}
-
-	for _, cmd := range cmds {
-		if _, ex := r.Commands()[cmd]; !ex {
-			return false
-		}
-	}
-	return true
-}
-
-// GetCommandHandler returns the CommandHandler of cmd.
-func (r *Redis) GetCommandHandler(cmd string) CommandHandler {
-	r.Mu().RLock()
-	defer r.Mu().RUnlock()
-	return r.getCommands()[cmd]
-}
-
-// FlushCommands removes all commands.
-func (r *Redis) FlushCommands() {
-	r.Mu().Lock()
-	defer r.Mu().Unlock()
-	r.commands = make(Commands)
+	id := r.nextClientId
+	r.nextClientId++
+	return id
 }
 
 var defaultRedis *Redis
@@ -266,36 +174,36 @@ func Default() *Redis {
 func createDefault() *Redis {
 	// initialize default redis server
 	cmnds := Commands{
-		"ping": cmds.Ping,
-		"set":  cmds.Set,
-		"get":  cmds.Get,
-		"del":  cmds.Del,
-		"ttl":  cmds.Ttl,
+		"ping": Ping,
+		"set":  Set,
+		"get":  Get,
+		"del":  Del,
+		"ttl":  Ttl,
 	}
-	return &Redis{
+	r := &Redis{
 		mu: new(sync.RWMutex),
-		accept: func(c redcon.Conn, r *Redis) bool {
+		accept: func(c *Client) bool {
 			return true
 		},
-		onClose: func(c redcon.Conn, err error, r *Redis) {
+		onClose: func(c *Client, err error) {
 		},
-		handler: func(c redcon.Conn, cmd redcon.Command, r *Redis) {
+		handler: func(c *Client, cmd redcon.Command) {
 			P("-------------------------")
 			P(string(cmd.Raw))
 			cmdl := strings.ToLower(string(cmd.Args[0]))
-			if r.CommandExists(cmdl) {
-				r.GetCommandHandler(cmdl)(c, cmd, r)
+			if c.Redis().CommandExists(cmdl) {
+				c.Redis().CommandHandlerFn(cmdl)(c, cmd)
 			} else {
-				r.unknownCommand(c, cmd, r)
+				c.Redis().UnknownCommandFn()(c, cmd)
 			}
 		},
-		unknownCommand: func(c redcon.Conn, cmd redcon.Command, r *Redis) {
-			c.WriteError("ERR unknown command '" + string(cmd.Args[0]) + "'")
+		unknownCommand: func(c *Client, cmd redcon.Command) {
+			c.Conn().WriteError("ERR unknown command '" + string(cmd.Args[0]) + "'")
 		},
-		internalItemStore: store.NewDevStore(),
-		externalItemStore: store.NewDevStore(),
-		commands:          cmnds,
+		commands: cmnds,
 	}
+	r.redisDbs = make(RedisDbs, redisDbMapSizeDefault)
+	return r
 }
 
 func P(s string) {

@@ -26,7 +26,7 @@ func ExampleNewClient() {
 				fmt.Println(vs)
 			}
 			time.Sleep(100 * time.Millisecond)
-			vs, err = client.Get("milli").Result()
+			vs, err = client.Get("milli").Result() // passive expire currently not impl so expect value
 			if err != nil {
 				fmt.Println("err:", err.Error())
 			} else {

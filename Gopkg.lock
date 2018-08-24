@@ -3,7 +3,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:2d021c6d1e4acace056cf76247aab49cafd1599f90d7683a9df1a49ff1467da6"
+  digest = "1:a9b34b1f8ed97398ef96d268a97dfbf16fa3b7b8109295758a7ea142dbb9cce8"
   name = "github.com/go-redis/redis"
   packages = [
     ".",
@@ -16,7 +16,7 @@
     "internal/util",
   ]
   pruneopts = "UT"
-  revision = "655336673b5549556800106e0dba86edc8a108c7"
+  revision = "1614e579ed966441b8e0c3ccea1dd0fbbd93a6ae"
 
 [[projects]]
   branch = "master"

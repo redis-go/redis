@@ -17,21 +17,23 @@ func ExampleNewClient() {
 		DB:       0,  // use default DB
 	})
 
-	p := client.Pipeline()
-	r1 := p.Ping()
-	r2 := p.Ping()
-	fmt.Println(p.Exec())
-
-	fmt.Println(r1.Val())
-	fmt.Println(r2.Val())
-
-	v, err := client.Set("abc", "test", 99*time.Second).Result()
-	if err != nil {
-		fmt.Println("err:", err.Error())
-	} else {
-		fmt.Println(v)
+	for i := 0; i < 1; i++ {
+		go func() {
+			vs, err := client.Set("milli", "value", 3*time.Millisecond).Result()
+			if err != nil {
+				fmt.Println("err:", err.Error())
+			} else {
+				fmt.Println(vs)
+			}
+			time.Sleep(100 * time.Millisecond)
+			vs, err = client.Get("milli").Result()
+			if err != nil {
+				fmt.Println("err:", err.Error())
+			} else {
+				fmt.Println(vs)
+			}
+		}()
 	}
-	//fmt.Println(client.Get("abc"))
-	//fmt.Println(client.Del("abc"))
-	//fmt.Println(client.Do("detach"))
+
+	time.Sleep(5 * time.Second)
 }

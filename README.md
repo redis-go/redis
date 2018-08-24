@@ -16,6 +16,9 @@ We are searching contributors!
 ### TODO after Roadmap is done
 - [ ] Persistence
 - [ ] Redis config
+  - [ ] Default redis config format
+  - [ ] YAML support
+  - [ ] Json support
 - [ ] Pub/Sub
 - [ ] Redis modules
 - [ ] Tests

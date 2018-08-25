@@ -5,7 +5,7 @@ import (
 )
 
 const StringType = uint64(0)
-const StringTypeName = "string"
+const StringTypeFancy = "string"
 
 type String struct {
 	str *string
@@ -26,12 +26,12 @@ func (s *String) Value() interface{} {
 	return s.str
 }
 
-func (s *String) ValueTypeId() uint64 {
+func (s *String) ValueType() uint64 {
 	return StringType
 }
 
-func (s *String) ValueType() string {
-	return StringTypeName
+func (s *String) ValueTypeFancy() string {
+	return StringTypeFancy
 }
 
 func (s *String) Expiry() time.Time {

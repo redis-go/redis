@@ -2,7 +2,6 @@ package redis
 
 import (
 	"crypto/tls"
-	"fmt"
 	"github.com/redis-go/redcon"
 	"strings"
 	"sync"
@@ -16,7 +15,7 @@ const (
 
 // This is the redis server.
 type Redis struct {
-	// databases
+	// databases/keyspaces
 	redisDbs RedisDbs
 
 	// Locking is important, share this mutex around to provide state.
@@ -174,11 +173,11 @@ func Default() *Redis {
 func createDefault() *Redis {
 	// initialize default redis server
 	cmnds := Commands{
-		"ping": Ping,
-		"set":  Set,
-		"get":  Get,
-		"del":  Del,
-		"ttl":  Ttl,
+		"ping": NewCommand("ping", Ping, CMD_STALE, CMD_FAST),
+		"set":  NewCommand("set", Set, CMD_WRITE, CMD_DENYOOM),
+		"get":  NewCommand("get", Get, CMD_READONLY, CMD_FAST),
+		"del":  NewCommand("del", Del, CMD_WRITE),
+		"ttl":  NewCommand("ttl", Ttl, CMD_READONLY, CMD_FAST),
 	}
 	r := &Redis{
 		mu: new(sync.RWMutex),
@@ -188,8 +187,6 @@ func createDefault() *Redis {
 		onClose: func(c *Client, err error) {
 		},
 		handler: func(c *Client, cmd redcon.Command) {
-			P("-------------------------")
-			P(string(cmd.Raw))
 			cmdl := strings.ToLower(string(cmd.Args[0]))
 			if c.Redis().CommandExists(cmdl) {
 				c.Redis().CommandHandlerFn(cmdl)(c, cmd)
@@ -203,9 +200,6 @@ func createDefault() *Redis {
 		commands: cmnds,
 	}
 	r.redisDbs = make(RedisDbs, redisDbMapSizeDefault)
+	r.RedisDb(0) // initializes default db 0
 	return r
-}
-
-func P(s string) {
-	fmt.Println(s)
 }

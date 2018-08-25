@@ -44,9 +44,9 @@ type Item interface {
 	// The id of the type of the Item.
 	// This need to be constant for the type because it is
 	// used when de-/serializing item from/to disk.
-	ValueTypeId() uint64
+	ValueType() uint64
 	// The type of the Item as string.
-	ValueType() string
+	ValueTypeFancy() string
 
 	// Get timestamp when the item expires.
 	Expiry() time.Time
@@ -118,16 +118,29 @@ func (db *RedisDb) Set(key *string, i Item) {
 func (db *RedisDb) Get(key *string) Item {
 	db.Mu().RLock()
 	defer db.Mu().RUnlock()
+	return db.get(key)
+}
+
+func (db *RedisDb) get(key *string) Item {
 	i, _ := db.keys[*key]
 	return i
 }
 
 // Deletes a key, returns true if key existed.
 func (db *RedisDb) Delete(key *string) bool {
-	ok := db.Exists(key)
 	db.Mu().Lock()
 	defer db.Mu().Unlock()
+	return db.delete(key, true)
+}
+
+// If checkExists is false, then return bool is reprehensible.
+func (db *RedisDb) delete(key *string, checkExists bool) bool {
+	var ok bool
+	if checkExists {
+		ok = db.exists(key)
+	}
 	delete(db.keys, *key)
+	delete(db.expiringKeys, *key)
 	return ok
 }
 
@@ -135,6 +148,46 @@ func (db *RedisDb) Delete(key *string) bool {
 func (db *RedisDb) Exists(key *string) bool {
 	db.Mu().RLock()
 	defer db.Mu().RUnlock()
+	return db.exists(key)
+}
+func (db *RedisDb) exists(key *string) bool {
 	_, ok := db.keys[*key]
 	return ok
+}
+
+// Check if key can expire.
+func (db *RedisDb) Expires(key *string) bool {
+	db.Mu().RLock()
+	defer db.Mu().RUnlock()
+	_, ok := db.expiringKeys[*key]
+	return ok
+}
+
+// GetOrExpire gets the item or nil if expired or not exists.
+func (db *RedisDb) GetOrExpired(key *string, deleteIfExpired bool) Item {
+	// TODO mutex optimize this func so that a RLock is mainly first opened
+
+	db.Mu().Lock()
+	defer db.Mu().Unlock()
+	i, ok := db.keys[*key]
+	if !ok {
+		return nil
+	}
+	if ItemExpired(i) {
+		if deleteIfExpired {
+			db.delete(key, false)
+		}
+		return nil
+	}
+	return i
+}
+
+// Expired check if a timestamp is expired.
+func Expired(expireAt time.Time) bool {
+	return time.Now().After(expireAt)
+}
+
+// ItemExpired check if an item can and is expired
+func ItemExpired(i Item) bool {
+	return i.Expires() && Expired(i.Expiry())
 }

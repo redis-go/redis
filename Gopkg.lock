@@ -20,6 +20,14 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:09970bb8daf100bdf11b48b72c71ef980cd2b50efbd903989b3d182956be0b83"
+  name = "github.com/hako/durafmt"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "7b7ae1e72eade09dbc9c2cfba3e6c4bae7b8bcac"
+
+[[projects]]
+  branch = "master"
   digest = "1:b71eb6ea46bd52fc536b9b88ea26aa88d23d0af779b40515433643ecd9c5940b"
   name = "github.com/redis-go/redcon"
   packages = ["."]
@@ -31,6 +39,7 @@
   analyzer-version = 1
   input-imports = [
     "github.com/go-redis/redis",
+    "github.com/hako/durafmt",
     "github.com/redis-go/redcon",
   ]
   solver-name = "gps-cdcl"

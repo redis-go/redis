@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-	log.Println("Work in Progress")
+	log.Println("Work in Progress version")
 	log.Fatal(redis.Run(":6379"))
 }

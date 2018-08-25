@@ -8,6 +8,7 @@
 <p align="center">Work-In-Progress Redis implementation in Go</p>
 
 This project intentionally started to see how easy it is in Go to implement a full blown Redis clone.
+As one of the side effects, imagine you could write redis modules in Go, that would be awesome!
 
 # WIP
 A *work-in-progress* implementation of redis for Go.

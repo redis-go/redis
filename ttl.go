@@ -6,15 +6,14 @@ import (
 	"time"
 )
 
-// TODO
-func Ttl(c *Client, cmd redcon.Command) {
+func TtlCommand(c *Client, cmd redcon.Command) {
 	if len(cmd.Args) != 2 {
 		c.Conn().WriteError(fmt.Sprintf("wrong number of arguments (given %d, expected 1)", len(cmd.Args)-1))
 		return
 	}
 
 	key := string(cmd.Args[1])
-	i := c.Redis().RedisDb(c.Db()).Get(&key)
+	i := c.Redis().RedisDb(c.Db()).GetOrExpired(&key, true)
 	if i == nil {
 		c.Conn().WriteInt(-2)
 		return
@@ -23,6 +22,5 @@ func Ttl(c *Client, cmd redcon.Command) {
 		return
 	}
 
-	// TODO delete before, if expired
-	c.Conn().WriteInt64(int64(time.Now().Sub(i.Expiry()).Seconds()))
+	c.Conn().WriteInt64(int64(i.Expiry().Sub(time.Now()).Seconds()))
 }

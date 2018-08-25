@@ -6,8 +6,7 @@ import (
 	"github.com/redis-go/redis/types"
 )
 
-// TODO
-func Get(c *Client, cmd redcon.Command) {
+func GetCommand(c *Client, cmd redcon.Command) {
 	key := string(cmd.Args[1])
 
 	db := c.Redis().RedisDb(c.Db())

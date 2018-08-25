@@ -45,12 +45,12 @@ func (r *Redis) getClients() Clients {
 	return r.clients
 }
 
-// Get the redis instance.
+// GetCommand the redis instance.
 func (c *Client) Redis() *Redis {
 	return c.redis
 }
 
-// Get the mutex.
+// GetCommand the mutex.
 func (c *Client) Mu() *sync.RWMutex {
 	return c.Redis().Mu()
 }

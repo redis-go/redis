@@ -173,11 +173,11 @@ func Default() *Redis {
 func createDefault() *Redis {
 	// initialize default redis server
 	cmnds := Commands{
-		"ping": NewCommand("ping", Ping, CMD_STALE, CMD_FAST),
-		"set":  NewCommand("set", Set, CMD_WRITE, CMD_DENYOOM),
-		"get":  NewCommand("get", Get, CMD_READONLY, CMD_FAST),
-		"del":  NewCommand("del", Del, CMD_WRITE),
-		"ttl":  NewCommand("ttl", Ttl, CMD_READONLY, CMD_FAST),
+		"ping": NewCommand("ping", PingCommand, CMD_STALE, CMD_FAST),
+		"set":  NewCommand("set", SetCommand, CMD_WRITE, CMD_DENYOOM),
+		"get":  NewCommand("get", GetCommand, CMD_READONLY, CMD_FAST),
+		"del":  NewCommand("del", DelCommand, CMD_WRITE),
+		"ttl":  NewCommand("ttl", TtlCommand, CMD_READONLY, CMD_FAST),
 	}
 	r := &Redis{
 		mu: new(sync.RWMutex),

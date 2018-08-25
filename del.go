@@ -4,9 +4,13 @@ import (
 	"github.com/redis-go/redcon"
 )
 
-// TODO
-func Del(c *Client, cmd redcon.Command) {
-	key := string(cmd.Args[1])
-	c.Redis().RedisDb(c.Db()).Delete(&key)
-	c.Conn().WriteInt(1)
+func DelCommand(c *Client, cmd redcon.Command) {
+	db := c.Redis().RedisDb(c.Db())
+	keys := make([]*string, 0, len(cmd.Args)-1)
+	for i := 1; i < len(cmd.Args); i++ {
+		k := string(cmd.Args[i])
+		keys = append(keys, &k)
+	}
+	dels := db.Delete(keys...)
+	c.Conn().WriteInt64(dels)
 }

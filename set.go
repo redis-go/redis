@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func Set(c *Client, cmd redcon.Command) {
+func SetCommand(c *Client, cmd redcon.Command) {
 	if len(cmd.Args) == 1 { // nothing done
 		c.Conn().WriteString("OK")
 		return

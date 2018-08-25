@@ -48,7 +48,7 @@ type Item interface {
 	// The type of the Item as string.
 	ValueTypeFancy() string
 
-	// Get timestamp when the item expires.
+	// GetCommand timestamp when the item expires.
 	Expiry() time.Time
 	// Expiry is set.
 	Expires() bool
@@ -97,12 +97,12 @@ func (r *Redis) RedisDb(dbId DatabaseId) *RedisDb {
 	return r.redisDbs[dbId]
 }
 
-// Get the redis instance.
+// GetCommand the redis instance.
 func (db *RedisDb) Redis() *Redis {
 	return db.redis
 }
 
-// Get the mutex.
+// GetCommand the mutex.
 func (db *RedisDb) Mu() *sync.RWMutex {
 	return db.Redis().Mu()
 }
@@ -127,10 +127,16 @@ func (db *RedisDb) get(key *string) Item {
 }
 
 // Deletes a key, returns true if key existed.
-func (db *RedisDb) Delete(key *string) bool {
+func (db *RedisDb) Delete(keys ...*string) int64 {
 	db.Mu().Lock()
 	defer db.Mu().Unlock()
-	return db.delete(key, true)
+	var c int64
+	for _, k := range keys {
+		if k != nil && db.delete(k, true) {
+			c++
+		}
+	}
+	return c
 }
 
 // If checkExists is false, then return bool is reprehensible.

@@ -96,7 +96,7 @@ func (r *Redis) Command(name string) *Command {
 }
 
 func (r *Redis) command(name string) *Command {
-	return r.getCommands()[name]
+	return r.commands[name]
 }
 
 // Commands returns the commands map.

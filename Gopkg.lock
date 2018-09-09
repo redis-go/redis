@@ -11,7 +11,7 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:a9b34b1f8ed97398ef96d268a97dfbf16fa3b7b8109295758a7ea142dbb9cce8"
+  digest = "1:9111f15e75266d984450ddb1251b18b4c2d5489a17fbad86340ae1f11f32e2e5"
   name = "github.com/go-redis/redis"
   packages = [
     ".",
@@ -24,15 +24,7 @@
     "internal/util",
   ]
   pruneopts = "UT"
-  revision = "1614e579ed966441b8e0c3ccea1dd0fbbd93a6ae"
-
-[[projects]]
-  branch = "master"
-  digest = "1:09970bb8daf100bdf11b48b72c71ef980cd2b50efbd903989b3d182956be0b83"
-  name = "github.com/hako/durafmt"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "7b7ae1e72eade09dbc9c2cfba3e6c4bae7b8bcac"
+  revision = "dd997adc426bef36707498dcb38a6dc5b4c5d61d"
 
 [[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
@@ -63,7 +55,6 @@
   analyzer-version = 1
   input-imports = [
     "github.com/go-redis/redis",
-    "github.com/hako/durafmt",
     "github.com/redis-go/redcon",
     "github.com/stretchr/testify/assert",
   ]

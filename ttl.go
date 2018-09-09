@@ -13,7 +13,7 @@ func TtlCommand(c *Client, cmd redcon.Command) {
 	}
 
 	key := string(cmd.Args[1])
-	i := c.Redis().RedisDb(c.Db()).GetOrExpired(&key, true)
+	i := c.Db().GetOrExpired(&key, true)
 	if i == nil {
 		c.Conn().WriteInt(-2)
 		return

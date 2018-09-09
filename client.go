@@ -45,12 +45,12 @@ func (r *Redis) getClients() Clients {
 	return r.clients
 }
 
-// GetCommand the redis instance.
+// Redis gets the redis instance.
 func (c *Client) Redis() *Redis {
 	return c.redis
 }
 
-// GetCommand the mutex.
+// Mu the mutex.
 func (c *Client) Mu() *sync.RWMutex {
 	return c.Redis().Mu()
 }
@@ -74,11 +74,16 @@ func (c *Client) SelectDb(db DatabaseId) {
 	c.db = db
 }
 
-// Db gets the clients selected database id.
-func (c *Client) Db() DatabaseId {
+// DbId gets the clients selected database id.
+func (c *Client) DbId() DatabaseId {
 	c.Mu().RLock()
 	defer c.Mu().RUnlock()
 	return c.db
+}
+
+// Db gets the clients selected database.
+func (c *Client) Db() *RedisDb {
+	return c.Redis().RedisDb(c.DbId())
 }
 
 // Disconnects and removes a Client.

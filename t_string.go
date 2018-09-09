@@ -1,4 +1,4 @@
-package types
+package redis
 
 import (
 	"time"
@@ -6,6 +6,8 @@ import (
 
 const StringType = uint64(0)
 const StringTypeFancy = "string"
+
+var _ Item = (*String)(nil)
 
 type String struct {
 	str *string
@@ -42,5 +44,5 @@ func (s *String) Expires() bool {
 	return s.expires
 }
 
-func (s *String) OnDelete(key *string) {
+func (s *String) OnDelete(key *string, db *RedisDb) {
 }

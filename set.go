@@ -3,7 +3,6 @@ package redis
 import (
 	"fmt"
 	"github.com/redis-go/redcon"
-	"github.com/redis-go/redis/types"
 	"strconv"
 	"strings"
 	"time"
@@ -113,7 +112,7 @@ func SetCommand(c *Client, cmd redcon.Command) {
 	}
 
 	// clients selected db
-	db := c.Redis().RedisDb(c.Db())
+	db := c.Db()
 
 	exists := db.Exists(key)
 	if NX && exists || XX && !exists {
@@ -121,6 +120,6 @@ func SetCommand(c *Client, cmd redcon.Command) {
 		return
 	}
 
-	db.Set(key, types.NewString(&value, yesExpire, expire))
+	db.Set(key, NewString(&value, yesExpire, expire))
 	c.Conn().WriteString("OK")
 }

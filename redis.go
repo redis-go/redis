@@ -5,6 +5,7 @@ import (
 	"github.com/redis-go/redcon"
 	"strings"
 	"sync"
+	"time"
 )
 
 const (
@@ -32,6 +33,8 @@ type Redis struct {
 	// TODO version
 	// TODO log writer
 	// TODO modules
+
+	keyExpirer KeyExpirer
 
 	clients      Clients
 	nextClientId ClientId
@@ -65,6 +68,7 @@ func Run(addr string) error {
 
 // Run runs the redis server.
 func (r *Redis) Run(addr string) error {
+	go r.KeyExpirer().Start(100*time.Millisecond, 20, 25)
 	return redcon.ListenAndServe(
 		addr,
 		func(conn redcon.Conn, cmd redcon.Command) {
@@ -81,6 +85,7 @@ func (r *Redis) Run(addr string) error {
 
 // Run runs the redis server with tls.
 func (r *Redis) RunTLS(addr string, tls *tls.Config) error {
+	go r.KeyExpirer().Start(100*time.Millisecond, 20, 25)
 	return redcon.ListenAndServeTLS(
 		addr,
 		func(conn redcon.Conn, cmd redcon.Command) {
@@ -155,6 +160,17 @@ func (r *Redis) NextClientId() ClientId {
 	return id
 }
 
+func (r *Redis) KeyExpirer() KeyExpirer {
+	r.Mu().RLock()
+	defer r.Mu().RUnlock()
+	return r.keyExpirer
+}
+func (r *Redis) SetKeyExpirer(ke KeyExpirer) {
+	r.Mu().Lock()
+	defer r.Mu().Unlock()
+	r.keyExpirer = ke
+}
+
 var defaultRedis *Redis
 
 // Default redis server.
@@ -201,5 +217,6 @@ func createDefault() *Redis {
 	}
 	r.redisDbs = make(RedisDbs, redisDbMapSizeDefault)
 	r.RedisDb(0) // initializes default db 0
+	r.keyExpirer = KeyExpirer(NewKeyExpirer(r))
 	return r
 }

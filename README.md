@@ -36,6 +36,7 @@ go get -u github.com/redis-go/redis
 - [x] RESP protocol
 - [x] able to register commands
 - [x] in-mem database
+- [x] active key expirer
 - [ ] Implementing data structures
   - [x] String
   - [ ] List
@@ -45,6 +46,7 @@ go get -u github.com/redis-go/redis
   - [ ] ...
 - [ ] Tests
   - [x] For existing commands
+  - [x] For key expirer
 - [ ] Alpha Release
 
 ### TODO beside Roadmap

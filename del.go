@@ -5,7 +5,7 @@ import (
 )
 
 func DelCommand(c *Client, cmd redcon.Command) {
-	db := c.Redis().RedisDb(c.Db())
+	db := c.Db()
 	keys := make([]*string, 0, len(cmd.Args)-1)
 	for i := 1; i < len(cmd.Args); i++ {
 		k := string(cmd.Args[i])

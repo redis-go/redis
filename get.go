@@ -3,13 +3,12 @@ package redis
 import (
 	"fmt"
 	"github.com/redis-go/redcon"
-	"github.com/redis-go/redis/types"
 )
 
 func GetCommand(c *Client, cmd redcon.Command) {
 	key := string(cmd.Args[1])
 
-	db := c.Redis().RedisDb(c.Db())
+	db := c.Db()
 	if db.Expires(&key) {
 
 	}
@@ -20,8 +19,8 @@ func GetCommand(c *Client, cmd redcon.Command) {
 		return
 	}
 
-	if i.ValueType() != types.StringType {
-		c.Conn().WriteError(fmt.Sprintf("%s: key is a %s not a %s", WrongTypeErr, i.ValueTypeFancy(), types.StringTypeFancy))
+	if i.ValueType() != StringType {
+		c.Conn().WriteError(fmt.Sprintf("%s: key is a %s not a %s", WrongTypeErr, i.ValueTypeFancy(), StringTypeFancy))
 		return
 	}
 

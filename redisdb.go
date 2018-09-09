@@ -54,7 +54,8 @@ type Item interface {
 	Expires() bool
 
 	// OnDelete is triggered before the key of the item is deleted.
-	OnDelete(key *string)
+	// db is the affected database.
+	OnDelete(key *string, db *RedisDb)
 }
 
 // NewRedisDb creates a new db.
@@ -97,14 +98,53 @@ func (r *Redis) RedisDb(dbId DatabaseId) *RedisDb {
 	return r.redisDbs[dbId]
 }
 
-// GetCommand the redis instance.
+func (r *Redis) RedisDbs() RedisDbs {
+	r.Mu().RLock()
+	defer r.Mu().RUnlock()
+	return r.redisDbs
+}
+
+// Redis gets the redis instance.
 func (db *RedisDb) Redis() *Redis {
 	return db.redis
 }
 
-// GetCommand the mutex.
+// Mu gets the mutex.
 func (db *RedisDb) Mu() *sync.RWMutex {
 	return db.Redis().Mu()
+}
+
+// Id gets the db id.
+func (db *RedisDb) Id() DatabaseId {
+	return db.id
+}
+
+// IsEmpty checks db is empty.
+func (db *RedisDb) IsEmpty() bool {
+	db.Mu().RLock()
+	defer db.Mu().RUnlock()
+	return len(db.keys) == 0
+}
+
+// IsEmptyExpire checks db has any expiring keys.
+func (db *RedisDb) IsEmptyExpire() bool {
+	db.Mu().RLock()
+	defer db.Mu().RUnlock()
+	return len(db.expiringKeys) == 0
+}
+
+// Keys gets all keys in this db.
+func (db *RedisDb) Keys() Keys {
+	db.Mu().RLock()
+	defer db.Mu().RUnlock()
+	return db.keys
+}
+
+// ExpiringKeys gets keys with an expiry set.
+func (db *RedisDb) ExpiringKeys() Keys {
+	db.Mu().RLock()
+	defer db.Mu().RUnlock()
+	return db.expiringKeys
 }
 
 // Sets a key with an item.
@@ -112,6 +152,9 @@ func (db *RedisDb) Set(key *string, i Item) {
 	db.Mu().Lock()
 	defer db.Mu().Unlock()
 	db.keys[*key] = i
+	if i.Expires() {
+		db.expiringKeys[*key] = i
+	}
 }
 
 // Returns the item by the key or nil if key does not exists.
@@ -128,11 +171,12 @@ func (db *RedisDb) get(key *string) Item {
 
 // Deletes a key, returns true if key existed.
 func (db *RedisDb) Delete(keys ...*string) int64 {
+	// TODO if it makes a difference, check keys exists with RLock and then if exists RWLock
 	db.Mu().Lock()
 	defer db.Mu().Unlock()
 	var c int64
 	for _, k := range keys {
-		if k != nil && db.delete(k, true) {
+		if k != nil && db.delete(k) {
 			c++
 		}
 	}
@@ -140,14 +184,15 @@ func (db *RedisDb) Delete(keys ...*string) int64 {
 }
 
 // If checkExists is false, then return bool is reprehensible.
-func (db *RedisDb) delete(key *string, checkExists bool) bool {
-	var ok bool
-	if checkExists {
-		ok = db.exists(key)
+func (db *RedisDb) delete(key *string) bool {
+	i := db.get(key)
+	if i == nil {
+		return false
 	}
+	i.OnDelete(key, db)
 	delete(db.keys, *key)
 	delete(db.expiringKeys, *key)
-	return ok
+	return true
 }
 
 // Check if key exists.
@@ -181,7 +226,7 @@ func (db *RedisDb) GetOrExpired(key *string, deleteIfExpired bool) Item {
 	}
 	if ItemExpired(i) {
 		if deleteIfExpired {
-			db.delete(key, false)
+			db.delete(key)
 		}
 		return nil
 	}

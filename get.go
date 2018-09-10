@@ -8,12 +8,7 @@ import (
 func GetCommand(c *Client, cmd redcon.Command) {
 	key := string(cmd.Args[1])
 
-	db := c.Db()
-	if db.Expires(&key) {
-
-	}
-
-	i := db.GetOrExpire(&key, true)
+	i := c.Db().GetOrExpire(&key, true)
 	if i == nil {
 		c.Conn().WriteNull()
 		return

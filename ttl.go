@@ -12,15 +12,19 @@ func TtlCommand(c *Client, cmd redcon.Command) {
 		return
 	}
 
+	db := c.Db()
 	key := string(cmd.Args[1])
-	i := c.Db().GetOrExpired(&key, true)
-	if i == nil {
+	db.DeleteExpired(&key)
+	if !db.Exists(&key) {
 		c.Conn().WriteInt(-2)
 		return
-	} else if !i.Expires() {
+	}
+
+	t := db.Expiry(&key)
+	if t.IsZero() {
 		c.Conn().WriteInt(-1)
 		return
 	}
 
-	c.Conn().WriteInt64(int64(i.Expiry().Sub(time.Now()).Seconds()))
+	c.Conn().WriteInt64(int64(t.Sub(time.Now()).Seconds()))
 }

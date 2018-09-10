@@ -13,7 +13,7 @@ func GetCommand(c *Client, cmd redcon.Command) {
 
 	}
 
-	i := db.GetOrExpired(&key, true)
+	i := db.GetOrExpire(&key, true)
 	if i == nil {
 		c.Conn().WriteNull()
 		return

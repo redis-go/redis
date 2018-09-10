@@ -58,7 +58,7 @@ func (e *Expirer) do(randomKeys, againPercentage int) {
 
 	dbs := make(map[*RedisDb]struct{})
 	for _, db := range e.Redis().RedisDbs() {
-		if db.IsEmptyExpire() {
+		if !db.HasExpiringKeys() {
 			continue
 		}
 		dbs[db] = struct{}{}
@@ -78,11 +78,11 @@ func (e *Expirer) do(randomKeys, againPercentage int) {
 		}()
 
 		// get random key
-		k, i := func() (*string, Item) {
-			for k, i := range db.ExpiringKeys() {
-				return &k, i
+		k := func() *string {
+			for k := range db.ExpiringKeys() {
+				return &k
 			}
-			return nil, nil
+			return nil
 		}()
 
 		if k == nil {
@@ -90,34 +90,15 @@ func (e *Expirer) do(randomKeys, againPercentage int) {
 		}
 
 		// del if expired
-		if ItemExpired(i) {
-			if db.Delete(k) != 0 {
-				deletedKeys++
-			}
+		if db.DeleteExpired(k) != 0 {
+			deletedKeys++
 		}
 	}
 
-	// Start again in new goroutine so many keys are fast deleted
+	// Start again in new goroutine so keys are deleted fast
 	if againPercentage > 0 && deletedKeys/randomKeys*100 > againPercentage {
 		go e.do(randomKeys, againPercentage)
 	}
-}
-
-// Deletes random expiring keys from db.
-// num is the number of keys to delete.
-// Returns number of left deletions so >0 if db is empty.
-func delRandFromDb(num int, db *RedisDb) int {
-	var c int
-	for k, i := range db.ExpiringKeys() {
-		if c == num {
-			return 0
-		}
-		if ItemExpired(i) {
-			db.Delete(&k)
-		}
-		c++
-	}
-	return num - c
 }
 
 // Redis gets the redis instance.

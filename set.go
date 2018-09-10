@@ -120,6 +120,6 @@ func SetCommand(c *Client, cmd redcon.Command) {
 		return
 	}
 
-	db.Set(key, NewString(&value, yesExpire, expire))
+	db.Set(key, NewString(&value), yesExpire, expire)
 	c.Conn().WriteString("OK")
 }

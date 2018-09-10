@@ -1,9 +1,5 @@
 package redis
 
-import (
-	"time"
-)
-
 const ListType = uint64(0)
 const ListTypeFancy = "list"
 
@@ -23,14 +19,6 @@ func (l *List) ValueType() uint64 {
 
 func (l *List) ValueTypeFancy() string {
 	return ListTypeFancy
-}
-
-func (l *List) Expiry() time.Time {
-	panic("implement me")
-}
-
-func (l *List) Expires() bool {
-	panic("implement me")
 }
 
 func (l *List) OnDelete(key *string, db *RedisDb) {

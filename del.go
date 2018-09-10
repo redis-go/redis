@@ -12,5 +12,5 @@ func DelCommand(c *Client, cmd redcon.Command) {
 		keys = append(keys, &k)
 	}
 	dels := db.Delete(keys...)
-	c.Conn().WriteInt64(dels)
+	c.Conn().WriteInt(dels)
 }

@@ -60,4 +60,4 @@ go get -u github.com/redis-go/redis
 - [ ] Benchmarks
 - [ ] master slaves
 - [ ] cluster
-- [ ] ...x
+- [ ] ...

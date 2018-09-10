@@ -194,6 +194,9 @@ func createDefault() *Redis {
 		"get":  NewCommand("get", GetCommand, CMD_READONLY, CMD_FAST),
 		"del":  NewCommand("del", DelCommand, CMD_WRITE),
 		"ttl":  NewCommand("ttl", TtlCommand, CMD_READONLY, CMD_FAST),
+
+		"lpush": NewCommand("lpush", LPushCommand, CMD_WRITE, CMD_FAST, CMD_DENYOOM),
+		"lpop":  NewCommand("lpop", LPopCommand, CMD_WRITE, CMD_FAST),
 	}
 	r := &Redis{
 		mu: new(sync.RWMutex),

@@ -32,7 +32,7 @@ go get -u github.com/redis-go/redis
 
 
 ### Roadmap
-- [x] Client connection & requests
+- [x] Client connection / request / respond
 - [x] RESP protocol
 - [x] able to register commands
 - [x] in-mem database
@@ -60,4 +60,4 @@ go get -u github.com/redis-go/redis
 - [ ] Benchmarks
 - [ ] master slaves
 - [ ] cluster
-- [ ] ...
+- [ ] ...x

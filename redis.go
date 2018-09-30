@@ -9,9 +9,10 @@ import (
 )
 
 const (
-	SyntaxERR     = "ERR syntax error"
-	InvalidIntErr = "ERR value is not an integer or out of range"
-	WrongTypeErr  = "WRONGTYPE Operation against a key holding the wrong kind of value"
+	SyntaxErr         = "ERR syntax error"
+	InvalidIntErr     = "ERR value is not an integer or out of range"
+	WrongTypeErr      = "WRONGTYPE Operation against a key holding the wrong kind of value"
+	WrongNumOfArgsErr = "ERR wrong number of arguments for '%s' command"
 )
 
 // This is the redis server.
@@ -33,6 +34,7 @@ type Redis struct {
 	// TODO version
 	// TODO log writer
 	// TODO modules
+	// TODO redis options type
 
 	keyExpirer KeyExpirer
 
@@ -188,16 +190,6 @@ func Default() *Redis {
 // createDefault creates a new default redis.
 func createDefault() *Redis {
 	// initialize default redis server
-	cmnds := Commands{
-		"ping": NewCommand("ping", PingCommand, CMD_STALE, CMD_FAST),
-		"set":  NewCommand("set", SetCommand, CMD_WRITE, CMD_DENYOOM),
-		"get":  NewCommand("get", GetCommand, CMD_READONLY, CMD_FAST),
-		"del":  NewCommand("del", DelCommand, CMD_WRITE),
-		"ttl":  NewCommand("ttl", TtlCommand, CMD_READONLY, CMD_FAST),
-
-		"lpush": NewCommand("lpush", LPushCommand, CMD_WRITE, CMD_FAST, CMD_DENYOOM),
-		"lpop":  NewCommand("lpop", LPopCommand, CMD_WRITE, CMD_FAST),
-	}
 	r := &Redis{
 		mu: new(sync.RWMutex),
 		accept: func(c *Client) bool {
@@ -216,10 +208,24 @@ func createDefault() *Redis {
 		unknownCommand: func(c *Client, cmd redcon.Command) {
 			c.Conn().WriteError("ERR unknown command '" + string(cmd.Args[0]) + "'")
 		},
-		commands: cmnds,
+		commands: make(Commands, 0),
 	}
 	r.redisDbs = make(RedisDbs, redisDbMapSizeDefault)
 	r.RedisDb(0) // initializes default db 0
 	r.keyExpirer = KeyExpirer(NewKeyExpirer(r))
+
+	r.RegisterCommands([]*Command{
+		NewCommand("ping", PingCommand, CMD_STALE, CMD_FAST),
+		NewCommand("set", SetCommand, CMD_WRITE, CMD_DENYOOM),
+		NewCommand("get", GetCommand, CMD_READONLY, CMD_FAST),
+		NewCommand("del", DelCommand, CMD_WRITE),
+		NewCommand("ttl", TtlCommand, CMD_READONLY, CMD_FAST),
+
+		NewCommand("lpush", LPushCommand, CMD_WRITE, CMD_FAST, CMD_DENYOOM),
+		NewCommand("rpush", RPushCommand, CMD_WRITE, CMD_FAST, CMD_DENYOOM),
+		NewCommand("lpop", LPopCommand, CMD_WRITE, CMD_FAST),
+		NewCommand("rpop", RPopCommand, CMD_WRITE, CMD_FAST),
+		NewCommand("lrange", LRangeCommand, CMD_READONLY),
+	})
 	return r
 }

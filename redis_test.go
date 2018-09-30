@@ -93,3 +93,56 @@ func TestExpiry(t *testing.T) {
 	assert.Equal(t, "", s)
 	assert.Error(t, err)
 }
+
+func TestLPushCommand(t *testing.T) {
+	i, err := c.LPush("lpushkey", "va").Result()
+	assert.Equal(t, int64(1), i)
+	assert.NoError(t, err)
+
+	i, err = c.LPush("lpushkey", "vb").Result()
+	assert.Equal(t, int64(2), i)
+	assert.NoError(t, err)
+
+	i, err = c.LPush("lpushkey", "vc", "vd").Result()
+	assert.Equal(t, int64(4), i)
+	assert.NoError(t, err)
+
+	i, err = c.LPush("lpushkey2", "1", "2").Result()
+	assert.Equal(t, int64(2), i)
+	assert.NoError(t, err)
+
+	i, err = c.LPush("lpush3key").Result()
+	assert.Error(t, err)
+}
+
+func TestLPopCommand(t *testing.T) {
+	s, err := c.LPop("lpop1").Result()
+	assert.Zero(t, s)
+	assert.Error(t, err)
+
+	i, err := c.LPush("list", "a", "b").Result()
+	assert.Equal(t, int64(2), i)
+	assert.NoError(t, err)
+
+	s, err = c.LPop("list").Result()
+	assert.Equal(t, "b", s)
+	assert.NoError(t, err)
+
+	s, err = c.LPop("list").Result()
+	assert.Equal(t, "a", s)
+	assert.NoError(t, err)
+
+	s, err = c.LPop("list").Result()
+	assert.Zero(t, s)
+	assert.Error(t, err)
+}
+
+func TestLRangeCommand(t *testing.T) {
+	s, err := c.LRange("lrange", 0, 0).Result()
+	assert.Zero(t, s)
+	assert.Error(t, err)
+
+	i, err := c.LPush("list2", "a", "b").Result()
+	assert.Equal(t, int64(2), i)
+	assert.NoError(t, err)
+}

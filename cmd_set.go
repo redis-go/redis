@@ -35,17 +35,17 @@ func SetCommand(c *Client, cmd redcon.Command) {
 			arg := strings.ToLower(string(cmd.Args[i]))
 			switch arg {
 			default:
-				c.Conn().WriteError(SyntaxERR)
+				c.Conn().WriteError(SyntaxErr)
 				return
 			case "ex":
 				if isPX { // is already px
-					c.Conn().WriteError(SyntaxERR)
+					c.Conn().WriteError(SyntaxErr)
 					return
 				}
 
 				// was last arg?
 				if len(cmd.Args) == i {
-					c.Conn().WriteError(SyntaxERR)
+					c.Conn().WriteError(SyntaxErr)
 					return
 				}
 
@@ -66,13 +66,13 @@ func SetCommand(c *Client, cmd redcon.Command) {
 				continue
 			case "px":
 				if isEX { // is already ex
-					c.Conn().WriteError(SyntaxERR)
+					c.Conn().WriteError(SyntaxErr)
 					return
 				}
 
 				// was last arg?
 				if len(cmd.Args) == i {
-					c.Conn().WriteError(SyntaxERR)
+					c.Conn().WriteError(SyntaxErr)
 					return
 				}
 
@@ -93,7 +93,7 @@ func SetCommand(c *Client, cmd redcon.Command) {
 				continue
 			case "nx":
 				if XX { // is already xx
-					c.Conn().WriteError(SyntaxERR)
+					c.Conn().WriteError(SyntaxErr)
 					return
 				}
 				NX = true
@@ -101,7 +101,7 @@ func SetCommand(c *Client, cmd redcon.Command) {
 				continue
 			case "xx":
 				if NX { // is already nx
-					c.Conn().WriteError(SyntaxERR)
+					c.Conn().WriteError(SyntaxErr)
 					return
 				}
 				XX = true

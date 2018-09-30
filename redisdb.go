@@ -47,9 +47,9 @@ type Item interface {
 	// The id of the type of the Item.
 	// This need to be constant for the type because it is
 	// used when de-/serializing item from/to disk.
-	ValueType() uint64
+	Type() uint64
 	// The type of the Item as readable string.
-	ValueTypeFancy() string
+	TypeFancy() string
 
 	// OnDelete is triggered before the key of the item is deleted.
 	// db is the affected database.

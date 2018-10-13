@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// SET key value [NX] [XX] [EX <seconds>] [PX <milliseconds>]
 func SetCommand(c *Client, cmd redcon.Command) {
 	if len(cmd.Args) == 1 { // nothing done
 		c.Conn().WriteString("OK")

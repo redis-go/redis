@@ -34,6 +34,15 @@ func (r *Redis) NewClient(conn redcon.Conn) *Client {
 	return c
 }
 
+// NextClientId atomically gets and increments a counter to return the next client id.
+func (r *Redis) NextClientId() ClientId {
+	r.Mu().Lock()
+	defer r.Mu().Unlock()
+	id := r.nextClientId
+	r.nextClientId++
+	return id
+}
+
 // Clients gets the current connected clients.
 func (r *Redis) Clients() Clients {
 	r.Mu().RLock()

@@ -12,12 +12,13 @@ func LPushCommand(c *Client, cmd redcon.Command) {
 		return
 	}
 	key := string(cmd.Args[1])
-
+	fmt.Println("KEY:", key)
 	db := c.Db()
 	i := db.GetOrExpire(&key, true)
 	if i == nil {
 		i = NewList()
 		db.Set(&key, i, false, time.Time{})
+		fmt.Println("CREATED NEW LIST")
 	} else if i.Type() != ListType {
 		c.Conn().WriteError(fmt.Sprintf("%s: key is a %s not a %s", WrongTypeErr, i.TypeFancy(), ListTypeFancy))
 		return

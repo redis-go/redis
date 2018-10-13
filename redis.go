@@ -1,11 +1,9 @@
 package redis
 
 import (
-	"crypto/tls"
 	"github.com/redis-go/redcon"
 	"strings"
 	"sync"
-	"time"
 )
 
 const (
@@ -62,47 +60,6 @@ type Clients map[ClientId]*Client
 // Client id
 type ClientId uint64
 
-// Run runs the default redis server.
-// Initializes the default redis if not already.
-func Run(addr string) error {
-	return Default().Run(addr)
-}
-
-// Run runs the redis server.
-func (r *Redis) Run(addr string) error {
-	go r.KeyExpirer().Start(100*time.Millisecond, 20, 25)
-	return redcon.ListenAndServe(
-		addr,
-		func(conn redcon.Conn, cmd redcon.Command) {
-			r.HandlerFn()(r.NewClient(conn), cmd)
-		},
-		func(conn redcon.Conn) bool {
-			return r.AcceptFn()(r.NewClient(conn))
-		},
-		func(conn redcon.Conn, err error) {
-			r.OnCloseFn()(r.NewClient(conn), err)
-		},
-	)
-}
-
-// Run runs the redis server with tls.
-func (r *Redis) RunTLS(addr string, tls *tls.Config) error {
-	go r.KeyExpirer().Start(100*time.Millisecond, 20, 25)
-	return redcon.ListenAndServeTLS(
-		addr,
-		func(conn redcon.Conn, cmd redcon.Command) {
-			r.HandlerFn()(r.NewClient(conn), cmd)
-		},
-		func(conn redcon.Conn) bool {
-			return r.AcceptFn()(r.NewClient(conn))
-		},
-		func(conn redcon.Conn, err error) {
-			r.OnCloseFn()(r.NewClient(conn), err)
-		},
-		tls,
-	)
-}
-
 // Gets the handler func.
 func (r *Redis) HandlerFn() Handler {
 	r.Mu().RLock()
@@ -151,15 +108,6 @@ func (r *Redis) SetOnCloseFn(new OnClose) {
 // The mutex of the redis.
 func (r *Redis) Mu() *sync.RWMutex {
 	return r.mu
-}
-
-// NextClientId atomically gets and increments a counter to return the next client id.
-func (r *Redis) NextClientId() ClientId {
-	r.Mu().Lock()
-	defer r.Mu().Unlock()
-	id := r.nextClientId
-	r.nextClientId++
-	return id
 }
 
 func (r *Redis) KeyExpirer() KeyExpirer {

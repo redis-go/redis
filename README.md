@@ -5,7 +5,7 @@
 <br>
 </p>
 
-<p align="center"><b>Full Redis implementation in Go</b></p>
+<p align="center"><b>Becoming a full Redis implementation in Go</b></p>
 
 This project started to see how easy it is to implement a full Redis clone in Go.
 As one of the side effects, imagine you could write redis modules in Go, that would be awesome!

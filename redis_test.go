@@ -78,14 +78,14 @@ func TestTtlCommand(t *testing.T) {
 	assert.NoError(t, err)
 
 	ttl, err = c.TTL("bKey").Result()
-	assert.Equal(t, time.Duration(-1000000000), ttl)
 	assert.NoError(t, err)
+	assert.Equal(t, time.Duration(-1000000000), ttl)
 }
 
 func TestExpiry(t *testing.T) {
 	s, err := c.Set("x", "val", 10*time.Millisecond).Result()
-	assert.Equal(t, "OK", s)
 	assert.NoError(t, err)
+	assert.Equal(t, "OK", s)
 
 	time.Sleep(10 * time.Millisecond)
 

@@ -14,8 +14,8 @@ func GetCommand(c *Client, cmd redcon.Command) {
 		return
 	}
 
-	if i.ValueType() != StringType {
-		c.Conn().WriteError(fmt.Sprintf("%s: key is a %s not a %s", WrongTypeErr, i.ValueTypeFancy(), StringTypeFancy))
+	if i.Type() != StringType {
+		c.Conn().WriteError(fmt.Sprintf("%s: key is a %s not a %s", WrongTypeErr, i.TypeFancy(), StringTypeFancy))
 		return
 	}
 

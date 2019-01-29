@@ -1,17 +1,16 @@
 package redis
 
 import (
-	"crypto/tls"
 	"github.com/redis-go/redcon"
 	"strings"
 	"sync"
-	"time"
 )
 
 const (
-	SyntaxERR     = "ERR syntax error"
-	InvalidIntErr = "ERR value is not an integer or out of range"
-	WrongTypeErr  = "WRONGTYPE Operation against a key holding the wrong kind of value"
+	SyntaxErr         = "ERR syntax error"
+	InvalidIntErr     = "ERR value is not an integer or out of range"
+	WrongTypeErr      = "WRONGTYPE Operation against a key holding the wrong kind of value"
+	WrongNumOfArgsErr = "ERR wrong number of arguments for '%s' command"
 )
 
 // This is the redis server.
@@ -33,6 +32,7 @@ type Redis struct {
 	// TODO version
 	// TODO log writer
 	// TODO modules
+	// TODO redis options type
 
 	keyExpirer KeyExpirer
 
@@ -59,47 +59,6 @@ type Clients map[ClientId]*Client
 
 // Client id
 type ClientId uint64
-
-// Run runs the default redis server.
-// Initializes the default redis if not already.
-func Run(addr string) error {
-	return Default().Run(addr)
-}
-
-// Run runs the redis server.
-func (r *Redis) Run(addr string) error {
-	go r.KeyExpirer().Start(100*time.Millisecond, 20, 25)
-	return redcon.ListenAndServe(
-		addr,
-		func(conn redcon.Conn, cmd redcon.Command) {
-			r.HandlerFn()(r.NewClient(conn), cmd)
-		},
-		func(conn redcon.Conn) bool {
-			return r.AcceptFn()(r.NewClient(conn))
-		},
-		func(conn redcon.Conn, err error) {
-			r.OnCloseFn()(r.NewClient(conn), err)
-		},
-	)
-}
-
-// Run runs the redis server with tls.
-func (r *Redis) RunTLS(addr string, tls *tls.Config) error {
-	go r.KeyExpirer().Start(100*time.Millisecond, 20, 25)
-	return redcon.ListenAndServeTLS(
-		addr,
-		func(conn redcon.Conn, cmd redcon.Command) {
-			r.HandlerFn()(r.NewClient(conn), cmd)
-		},
-		func(conn redcon.Conn) bool {
-			return r.AcceptFn()(r.NewClient(conn))
-		},
-		func(conn redcon.Conn, err error) {
-			r.OnCloseFn()(r.NewClient(conn), err)
-		},
-		tls,
-	)
-}
 
 // Gets the handler func.
 func (r *Redis) HandlerFn() Handler {
@@ -151,15 +110,6 @@ func (r *Redis) Mu() *sync.RWMutex {
 	return r.mu
 }
 
-// NextClientId atomically gets and increments a counter to return the next client id.
-func (r *Redis) NextClientId() ClientId {
-	r.Mu().Lock()
-	defer r.Mu().Unlock()
-	id := r.nextClientId
-	r.nextClientId++
-	return id
-}
-
 func (r *Redis) KeyExpirer() KeyExpirer {
 	r.Mu().RLock()
 	defer r.Mu().RUnlock()
@@ -188,16 +138,6 @@ func Default() *Redis {
 // createDefault creates a new default redis.
 func createDefault() *Redis {
 	// initialize default redis server
-	cmnds := Commands{
-		"ping": NewCommand("ping", PingCommand, CMD_STALE, CMD_FAST),
-		"set":  NewCommand("set", SetCommand, CMD_WRITE, CMD_DENYOOM),
-		"get":  NewCommand("get", GetCommand, CMD_READONLY, CMD_FAST),
-		"del":  NewCommand("del", DelCommand, CMD_WRITE),
-		"ttl":  NewCommand("ttl", TtlCommand, CMD_READONLY, CMD_FAST),
-
-		"lpush": NewCommand("lpush", LPushCommand, CMD_WRITE, CMD_FAST, CMD_DENYOOM),
-		"lpop":  NewCommand("lpop", LPopCommand, CMD_WRITE, CMD_FAST),
-	}
 	r := &Redis{
 		mu: new(sync.RWMutex),
 		accept: func(c *Client) bool {
@@ -216,10 +156,24 @@ func createDefault() *Redis {
 		unknownCommand: func(c *Client, cmd redcon.Command) {
 			c.Conn().WriteError("ERR unknown command '" + string(cmd.Args[0]) + "'")
 		},
-		commands: cmnds,
+		commands: make(Commands, 0),
 	}
 	r.redisDbs = make(RedisDbs, redisDbMapSizeDefault)
 	r.RedisDb(0) // initializes default db 0
 	r.keyExpirer = KeyExpirer(NewKeyExpirer(r))
+
+	r.RegisterCommands([]*Command{
+		NewCommand("ping", PingCommand, CMD_STALE, CMD_FAST),
+		NewCommand("set", SetCommand, CMD_WRITE, CMD_DENYOOM),
+		NewCommand("get", GetCommand, CMD_READONLY, CMD_FAST),
+		NewCommand("del", DelCommand, CMD_WRITE),
+		NewCommand("ttl", TtlCommand, CMD_READONLY, CMD_FAST),
+
+		NewCommand("lpush", LPushCommand, CMD_WRITE, CMD_FAST, CMD_DENYOOM),
+		NewCommand("rpush", RPushCommand, CMD_WRITE, CMD_FAST, CMD_DENYOOM),
+		NewCommand("lpop", LPopCommand, CMD_WRITE, CMD_FAST),
+		NewCommand("rpop", RPopCommand, CMD_WRITE, CMD_FAST),
+		NewCommand("lrange", LRangeCommand, CMD_READONLY),
+	})
 	return r
 }

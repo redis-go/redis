@@ -39,7 +39,7 @@ go get -u github.com/redis-go/redis
 - [x] active key expirer
 - [ ] Implementing data structures
   - [x] String
-  - [ ] List
+  - [x] List
   - [ ] Set
   - [ ] Sorted Set
   - [ ] Hash

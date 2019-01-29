@@ -6,22 +6,22 @@ const StringTypeFancy = "string"
 var _ Item = (*String)(nil)
 
 type String struct {
-	str *string
+	value *string
 }
 
-func NewString(str *string) *String {
-	return &String{str: str}
+func NewString(value *string) *String {
+	return &String{value: value}
 }
 
 func (s *String) Value() interface{} {
-	return s.str
+	return s.value
 }
 
-func (s *String) ValueType() uint64 {
+func (s *String) Type() uint64 {
 	return StringType
 }
 
-func (s *String) ValueTypeFancy() string {
+func (s *String) TypeFancy() string {
 	return StringTypeFancy
 }
 

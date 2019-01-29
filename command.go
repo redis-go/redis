@@ -23,7 +23,7 @@ const (
 	CMD_MODULE_NO_CLUSTER                    /* Deny on Redis Cluster. */
 )
 
-// A registered.
+// A command can be registered.
 type Command struct {
 	// The command name.
 	name string
@@ -73,11 +73,24 @@ func (cmd *Command) Name() string {
 	return cmd.name
 }
 
+// RegisterCommands adds commands to the redis instance.
+// If a cmd already exists the handler is overridden.
+func (r *Redis) RegisterCommands(cmds []*Command) {
+	r.Mu().Lock()
+	defer r.Mu().Unlock()
+	for _, cmd := range cmds {
+		r.registerCommand(cmd)
+	}
+}
+
 // RegisterCommand adds a command to the redis instance.
-// If cmd exists already the handler is overridden.
+// If cmd already exists the handler is overridden.
 func (r *Redis) RegisterCommand(cmd *Command) {
 	r.Mu().Lock()
 	defer r.Mu().Unlock()
+	r.registerCommand(cmd)
+}
+func (r *Redis) registerCommand(cmd *Command) {
 	r.getCommands()[cmd.Name()] = cmd
 }
 

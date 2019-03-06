@@ -1,11 +1,14 @@
 package main
 
 import (
-	"github.com/redis-go/redis"
+	"github.com/redis-go/redis/pkg"
 	"log"
 )
 
 func main() {
-	log.Println("Work in Progress version")
-	log.Fatal(redis.Run(":6379"))
+	log.Println("Redis started...")
+	err := redis.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
 }

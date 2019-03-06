@@ -5,59 +5,21 @@
 <br>
 </p>
 
-<p align="center"><b>Becoming a full Redis implementation in Go</b></p>
+<p align="center"><b>Redis -> to -> Go</b></p>
 
-This project started to see how easy it is to implement a full Redis clone in Go.
-As one of the side effects, imagine you could write redis modules in Go, that would be awesome!
-
-# Get involved!
-This project is in *work-in-progress*, so share ideas, code and have fun.
-
-The goal is to have all features and commands like the actual [redis](https://github.com/antirez/redis) written in C have.
-We are searching contributors!
-
-
-### Documentation
-
-godoc: https://godoc.org/github.com/redis-go/redis
+This project is a small implementation of [Redis](https://github.com/antirez/redis) in the Go language.
 
 ### Getting Started
 
 You can already test out the API.
 
-To install, run:
+To get it run:
 ```bash
 go get -u github.com/redis-go/redis
+go run $GOPATH/src/github.com/redis-go/redis/cmd/main.go
 ```
 
 
-### Roadmap
-- [x] Client connection / request / respond
-- [x] RESP protocol
-- [x] able to register commands
-- [x] in-mem database
-- [x] active key expirer
-- [ ] Implementing data structures
-  - [x] String
-  - [x] List
-  - [ ] Set
-  - [ ] Sorted Set
-  - [ ] Hash
-  - [ ] ...
-- [ ] Tests
-  - [x] For existing commands
-  - [x] For key expirer
-- [ ] Alpha Release
+### Documentation
 
-### TODO beside Roadmap
-- [ ] Persistence
-- [ ] Redis config
-  - [ ] Default redis config format
-  - [ ] YAML support
-  - [ ] Json support
-- [ ] Pub/Sub
-- [ ] Redis modules
-- [ ] Benchmarks
-- [ ] master slaves
-- [ ] cluster
-- [ ] ...
+godoc: https://godoc.org/github.com/redis-go/redis

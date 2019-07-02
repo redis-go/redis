@@ -1,25 +1,24 @@
 package redis
 
-import "net"
+import (
+	"github.com/redis-go/redis/pkg/proto"
+	"net"
+)
 
 // conn represents a client connection.
 type conn struct {
 	conn net.Conn
-	w    Writer
-	// r        reader
+	//w    *writer
+	rd       *proto.Reader
 	detached bool
 	closed   bool
-	// cmds     []Command
-}
-
-func (c *conn) WriteNull() {
-	panic("implement me")
 }
 
 // newConn returns a new Conn.
 func newConn(c net.Conn) *conn {
 	return &conn{
 		conn: c,
+		rd:   proto.NewReader(c),
 	}
 }
 
@@ -28,9 +27,8 @@ func (c *conn) NetConn() net.Conn {
 	return c.conn
 }
 
-// Close flushes the buffer and closes the connection.
+// Close closes the connection.
 func (c *conn) Close() error {
-	// c.w.Flush()
 	c.closed = true
 	return c.conn.Close()
 }

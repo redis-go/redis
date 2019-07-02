@@ -2,6 +2,7 @@ package redis
 
 import (
 	"crypto/tls"
+	"go.uber.org/zap"
 	"net"
 )
 
@@ -12,7 +13,7 @@ const (
 // WithTLS option makes the Server use TLS.
 func WithTLS(config *tls.Config) Option {
 	return func(r *Redis) {
-		r.s.tlsCfg = config
+		r.server.tlsCfg = config
 	}
 }
 
@@ -20,7 +21,7 @@ func WithTLS(config *tls.Config) Option {
 // This option is applied by default on localhost and redis standard port.
 func WithAddr(addr string) Option {
 	return func(r *Redis) {
-		r.s.addr = addr
+		r.server.addr = addr
 	}
 }
 
@@ -34,14 +35,19 @@ type server struct {
 	tlsCfg *tls.Config
 	// The current listener to accept new connections.
 	ln net.Listener
+	// The server logger.
+	logger *zap.Logger
 }
 
 // ConnHandler is called in a new goroutine on every new connection.
 type connHandler func(conn net.Conn)
 
-// NewServer returns a new Server and when started runs handler in a new goroutine on any new connection.
-func newServer(handler connHandler) *server {
-	s := &server{handler: handler}
+// newServer returns a new server and when started runs handler in a new goroutine on any new connection.
+func newServer(handler connHandler, logger *zap.Logger) *server {
+	s := &server{
+		handler: handler,
+		logger:  logger.With(zap.String("sector", "server")),
+	}
 	return s
 }
 
@@ -51,8 +57,10 @@ func (s *server) listenAndServe() error {
 	var err error
 
 	if s.tlsCfg == nil {
+		s.logger.Sugar().Debugf("tcp listener on address %s", s.addr)
 		ln, err = net.Listen("tcp", s.addr)
 	} else {
+		s.logger.Sugar().Debugf("tcp listener on address %s with tls config %+v", s.addr, s.tlsCfg)
 		ln, err = tls.Listen("tcp", s.addr, s.tlsCfg)
 	}
 
@@ -65,12 +73,16 @@ func (s *server) listenAndServe() error {
 }
 
 func (s *server) serve() error {
+	s.logger.Debug("serving new connections...")
 	for {
 		c, err := s.ln.Accept()
 		if err != nil {
 			return err
 		}
-		go s.handler(c)
+		go func() {
+			s.logger.Debug("new connection", zap.String("addr", c.RemoteAddr().String()))
+			s.handler(c)
+		}()
 	}
 }
 

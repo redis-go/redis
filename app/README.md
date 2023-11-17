@@ -22,10 +22,8 @@ To set up the development environment for this project, follow these steps:
 1. Install Redis on your local machine. Instructions can be found at [Redis's official documentation](https://redis.io/documentation).
 2. Ensure you have Go installed on your system. You can download it from [the Go website](https://golang.org/dl/).
 3. Clone the repository to your local machine.
-4. Navigate to the project directory and run `go mod tidy` to install the necessary dependencies.
-5. Start the Redis server by running `redis-server` in your terminal.
-6. Run the application with `go run main.go`.
-7. Access the web application by visiting `http://localhost:8080` in your web browser.
+4. Run the application and redis server with `go run app.go`.
+5. Access the web application by visiting `http://localhost:8080` in your web browser.
 
 ## Data Model Diagram
 

@@ -31,7 +31,7 @@ func (l *List) TypeFancy() string {
 }
 
 func (l *List) OnDelete(key *string, db *RedisDb) {
-	panic("implement me")
+
 }
 
 // LLen returns number of elements.

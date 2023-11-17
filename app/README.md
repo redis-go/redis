@@ -4,6 +4,8 @@
 
 This project is a basic web application that serves as an admin interface for a simple online store. It allows the store administrator to manage store items and categories, including adding, removing, and associating items with categories. The application uses a Redis database to store data and is built using Go with the `net/http` package for handling web requests and the `html/template` package for rendering the UI.
 
+> Note that we are even using my own Redis server implementation for this project, which I developed 5 years ago to learn some Go.
+
 ## Use Cases
 
 - **Adding Items**: Admin can add new items to the store with a name, price, and description.
@@ -53,7 +55,6 @@ erDiagram
 
 ## Contribution List
 
-- Developed the Redis database in Go 5 years ago.
 - Designed and implemented the data model for items and categories with a many-to-many relationship.
 - Developed the web server and routing logic using the `net/http` package.
 - Created HTML templates for the UI using the `html/template` package.

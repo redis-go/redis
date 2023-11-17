@@ -168,6 +168,7 @@ func createDefault() *Redis {
 		NewCommand("get", GetCommand, CMD_READONLY, CMD_FAST),
 		NewCommand("del", DelCommand, CMD_WRITE),
 		NewCommand("ttl", TtlCommand, CMD_READONLY, CMD_FAST),
+		NewCommand("lrem", LRemCommand, CMD_WRITE, CMD_FAST),
 
 		NewCommand("lpush", LPushCommand, CMD_WRITE, CMD_FAST, CMD_DENYOOM),
 		NewCommand("rpush", RPushCommand, CMD_WRITE, CMD_FAST, CMD_DENYOOM),

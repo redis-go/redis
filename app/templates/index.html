@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Store Admin</title>
+</head>
+<body>
+    <h1>Store Admin</h1>
+
+    <h2>Add New Item</h2>
+    <form method="POST" action="/add-item">
+        <input type="text" name="name" placeholder="Item Name" required>
+        <input type="number" step="0.01" name="price" placeholder="Price" required>
+        <textarea name="description" placeholder="Description" required></textarea>
+        <button type="submit">Add Item</button>
+    </form>
+
+    <h2>Add New Category</h2>
+    <form method="POST" action="/add-category">
+        <input type="text" name="name" placeholder="Category Name" required>
+        <button type="submit">Add Category</button>
+    </form>
+
+    <h2>Items</h2>
+    <ul>
+        {{range .Items}}
+        <li>
+            {{.Name}} - ${{printf "%.2f" .Price}}
+            <form method="POST" action="/remove-item" style="display: inline;">
+                <input type="hidden" name="item_id" value="{{.ID}}">
+                <button type="submit">Remove</button>
+            </form>
+        </li>
+        {{else}}
+        <li>No items found.</li>
+        {{end}}
+    </ul>
+
+    <h2>Categories</h2>
+    <ul>
+        {{range .Categories}}
+        <li>
+            {{.Name}}
+            <form method="POST" action="/remove-category" style="display: inline;">
+                <input type="hidden" name="category_id" value="{{.ID}}">
+                <button type="submit">Remove</button>
+            </form>
+        </li>
+        {{else}}
+        <li>No categories found.</li>
+        {{end}}
+    </ul>
+
+    <h2>Associate Item with Category</h2>
+    <form method="POST" action="/associate-item-category">
+        <select name="item_id" required>
+            <option value="">Select Item</option>
+            {{range .Items}}
+            <option value="{{.ID}}">{{.Name}}</option>
+            {{end}}
+        </select>
+        <select name="category_id" required>
+            <option value="">Select Category</option>
+            {{range .Categories}}
+            <option value="{{.ID}}">{{.Name}}</option>
+            {{end}}
+        </select>
+        <button type="submit">Associate</button>
+    </form>
+
+    <h2>Disassociate Item from Category</h2>
+    <form method="POST" action="/disassociate-item-category">
+        <select name="item_id" required>
+            <option value="">Select Item</option>
+            {{range .Items}}
+            <option value="{{.ID}}">{{.Name}}</option>
+            {{end}}
+        </select>
+        <select name="category_id" required>
+            <option value="">Select Category</option>
+            {{range .Categories}}
+            <option value="{{.ID}}">{{.Name}}</option>
+            {{end}}
+        </select>
+        <button type="submit">Disassociate</button>
+    </form>
+</body>
+</html>

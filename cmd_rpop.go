@@ -23,12 +23,12 @@ func RPopCommand(c *Client, cmd redcon.Command) {
 	}
 
 	l := i.(*List)
-	c.Redis().Mu().Lock()
+	db.Mu().Lock()
 	v, b := l.RPop()
 	if b {
 		db.Delete(&key)
 	}
-	c.Redis().Mu().Unlock()
+	db.Mu().Unlock()
 
 	c.Conn().WriteBulkString(*v)
 }

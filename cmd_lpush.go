@@ -26,12 +26,12 @@ func LPushCommand(c *Client, cmd redcon.Command) {
 
 	l := i.(*List)
 	var length int
-	c.Redis().Mu().Lock()
+	db.Mu().Lock()
 	for j := 2; j < len(cmd.Args); j++ {
 		v := string(cmd.Args[j])
 		length = l.LPush(&v)
 	}
-	c.Redis().Mu().Unlock()
+	db.Mu().Unlock()
 
 	c.Conn().WriteInt(length)
 }

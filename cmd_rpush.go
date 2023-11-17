@@ -16,7 +16,7 @@ func RPushCommand(c *Client, cmd redcon.Command) {
 	db := c.Db()
 	i := db.GetOrExpire(&key, true)
 	if i == nil {
-		i := NewList()
+		i = NewList()
 		db.Set(&key, i, false, time.Time{})
 	} else if i.Type() != ListType {
 		c.Conn().WriteError(fmt.Sprintf("%s: key is a %s not a %s", WrongTypeErr, i.TypeFancy(), ListTypeFancy))
@@ -25,12 +25,12 @@ func RPushCommand(c *Client, cmd redcon.Command) {
 
 	l := i.(*List)
 	var length int
-	c.Redis().Mu().Lock()
+	db.Mu().Lock()
 	for j := 2; j < len(cmd.Args); j++ {
 		v := string(cmd.Args[j])
 		length = l.RPush(&v)
 	}
-	c.Redis().Mu().Unlock()
+	db.Mu().Unlock()
 
 	c.Conn().WriteInt(length)
 }

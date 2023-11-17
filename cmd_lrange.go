@@ -34,9 +34,9 @@ func LRangeCommand(c *Client, cmd redcon.Command) {
 	}
 
 	l := i.(*List)
-	c.Redis().Mu().RLock()
+	db.Mu().RLock()
 	values := l.LRange(start, end)
-	c.Redis().Mu().RUnlock()
+	db.Mu().RUnlock()
 
 	c.Conn().WriteArray(len(values))
 	for _, v := range values {

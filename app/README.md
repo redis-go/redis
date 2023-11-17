@@ -19,11 +19,10 @@ This project is a basic web application that serves as an admin interface for a 
 
 To set up the development environment for this project, follow these steps:
 
-1. Install Redis on your local machine. Instructions can be found at [Redis's official documentation](https://redis.io/documentation).
-2. Ensure you have Go installed on your system. You can download it from [the Go website](https://golang.org/dl/).
-3. Clone the repository to your local machine.
-4. Run the application and redis server with `go run app.go`.
-5. Access the web application by visiting `http://localhost:8080` in your web browser.
+1. Ensure you have Go installed on your system. You can download it from [the Go website](https://golang.org/dl/).
+2. Clone the repository to your local machine.
+3. Run the application and redis server with `go run app.go`.
+4. Access the web application by visiting `http://localhost:8080` in your web browser.
 
 ## Data Model Diagram
 
